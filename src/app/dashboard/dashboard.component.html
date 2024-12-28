@@ -1,0 +1,16 @@
+<h1>Survey Dashboard</h1>
+
+<div class="survey-container">
+  <div *ngFor="let survey of surveys" class="survey-card">
+    <h2>{{ survey.title }}</h2>
+    <div class="editions">
+      <span *ngFor="let edition of survey.editions" 
+            class="edition"
+            [ngClass]="edition.status"
+            (click)="onEditionClick(survey, edition)">
+        {{ edition.year }}
+      </span>
+    </div>
+  </div>
+</div>
+
