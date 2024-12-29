@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Subject, SubSubject, Question, Answer } from '../models/survey.interface';
+import { Subject, SubSubject, Question, Answer } from '../models/surveyDetails.interface';
 import { SurveySidebarComponent } from '../components/survey-sidebar/survey-sidebar.component';
+import { SurveyService } from '../services/surveyDetails.service';
 
 @Component({
   selector: 'app-survey-edition',
   standalone: true,
   imports: [CommonModule, RouterModule, SurveySidebarComponent],
   template: `
-    <div class="survey-edition">
+    <div class="survey-container">
       <app-survey-sidebar
         [surveyTitle]="surveyTitle"
         [surveyYear]="surveyYear"
@@ -20,221 +21,382 @@ import { SurveySidebarComponent } from '../components/survey-sidebar/survey-side
         (subSubjectSelected)="selectSubSubject($event)"
       ></app-survey-sidebar>
 
-      <div class="main-content">
-        <div class="content-header">
-          <h2>{{ selectedSubSubject ? selectedSubSubject.name : (selectedSubject ? selectedSubject.name : 'Select a subject') }}</h2>
-        </div>
-        
-        <div class="questions-table" *ngIf="selectedSubSubject">
-          <h3>Questions</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Number</th>
-                <th>Question Text</th>
-                <th>Type</th>
-                <th>Difficulty</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let question of selectedSubSubject.questions" 
-                  (click)="selectQuestion(question)"
-                  [class.selected]="selectedQuestion?.id === question.id">
-                <td>{{ question.id }}</td>
-                <td>{{ question.text }}</td>
-                <td>{{ question.answerType }}</td>
-                <td>{{ question.difficulty }}</td>
-              </tr>
-            </tbody>
-          </table>
+      <main class="main-content">
+        <!-- Loading State -->
+        <div *ngIf="loading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading subjects...</p>
         </div>
 
-        <div class="answers-table" *ngIf="selectedQuestion">
-          <h3>Answers for {{ selectedQuestion.id }}</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Answer Text</th>
-                <th>Correct</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let answer of selectedQuestion.answers">
-                <td>{{ answer.text }}</td>
-                <td>{{ answer.isCorrect ? 'Yes' : 'No' }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Error State -->
+        <div *ngIf="error" class="error-state">
+          <div class="error-message">
+            <svg xmlns="http://www.w3.org/2000/svg" class="error-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+            </svg>
+            <p>{{ error }}</p>
+          </div>
+          <button class="retry-button" (click)="loadSubjects()">
+            Retry
+          </button>
         </div>
-      </div>
+
+        <!-- Content -->
+        <div *ngIf="!loading && !error" class="content-wrapper">
+          <header class="content-header">
+            <h1 class="content-title">
+              {{ selectedSubSubject ? selectedSubSubject.title : (selectedSubject ? selectedSubject.title : 'Select a subject') }}
+            </h1>
+          </header>
+          
+          <div class="content-body">
+            <!-- Questions Table -->
+            <section *ngIf="selectedSubSubject" class="questions-section">
+              <h2 class="section-title">Questions</h2>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Question</th>
+                      <th>Type</th>
+                      <th>Difficulty</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let question of selectedSubSubject.questions" 
+                        (click)="selectQuestion(question)"
+                        [class.selected]="selectedQuestion?.id === question.id"
+                        class="table-row">
+                      <td>{{ question.id }}</td>
+                      <td>{{ question.text }}</td>
+                      <td>
+                        <span class="badge" [class]="question.type.toLowerCase()">
+                          {{ question.type }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="difficulty-badge" [class]="getDifficultyClass(question)">
+                          {{ getDifficulty(question) }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Answers Table -->
+            <section *ngIf="selectedQuestion" class="answers-section">
+              <h2 class="section-title">
+                Answers for Question {{ selectedQuestion.id }}
+              </h2>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Answer</th>
+                      <th>Selection Count</th>
+                      <th>Percentage</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let answer of selectedQuestion.answers" class="table-row">
+                      <td>{{ answer.text }}</td>
+                      <td>{{ answer.selectionCount }}</td>
+                      <td>
+                        <div class="progress-wrapper">
+                          <div class="progress-bar" 
+                               [style.width]="getPercentage(answer) + '%'">
+                          </div>
+                          <span class="progress-text">
+                            {{ getPercentage(answer) }}%
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
     </div>
   `,
   styles: [`
-    .survey-edition {
+    .survey-container {
       display: flex;
-      height: 100vh;
-      background-color: #ffffff;
+      min-height: 100vh;
+      background-color: var(--gray-50);
     }
 
     .main-content {
       flex: 1;
-      overflow: auto;
-      padding: 24px;
+      padding: 2rem;
+      overflow-y: auto;
     }
 
-    .content-header {
-      margin-bottom: 24px;
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      color: var(--gray-600);
     }
 
-    .content-header h2 {
-      font-size: 24px;
-      font-weight: 600;
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--gray-200);
+      border-top-color: var(--primary-500);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
 
-    .questions-table, .answers-table {
-      margin-bottom: 24px;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
-    h3 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 12px;
+    .error-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 1rem;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
+    .error-message {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #ef4444;
     }
 
-    th, td {
-      padding: 12px 16px;
-      text-align: left;
-      border-bottom: 1px solid #e0e0e0;
+    .error-icon {
+      width: 24px;
+      height: 24px;
     }
 
-    th {
-      background-color: #f9f9f9;
-      font-weight: 600;
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    .questions-table tbody tr {
+    .retry-button {
+      padding: 0.5rem 1rem;
+      background-color: var(--primary-500);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
       cursor: pointer;
       transition: background-color 0.2s;
     }
 
-    .questions-table tbody tr:hover {
-      background-color: #f0f0f0;
+    .retry-button:hover {
+      background-color: var(--primary-600);
     }
 
-    .questions-table tbody tr.selected {
-      background-color: #e6e6e6;
+    .content-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .content-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin: 0;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin: 0 0 1rem 0;
+    }
+
+    .table-container {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      background-color: var(--gray-50);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 500;
+      color: var(--gray-600);
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .data-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .table-row {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .table-row:hover {
+      background-color: var(--gray-50);
+    }
+
+    .table-row.selected {
+      background-color: var(--primary-50);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge.multiple-choice {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge.open-ended {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .difficulty-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .difficulty-badge.easy {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+
+    .difficulty-badge.medium {
+      background-color: #fef9c3;
+      color: #854d0e;
+    }
+
+    .difficulty-badge.hard {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .progress-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .progress-bar {
+      height: 0.5rem;
+      background-color: var(--primary-100);
+      border-radius: 9999px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background-color: var(--primary-500);
+      border-radius: 9999px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+      min-width: 3rem;
+    }
+
+    .answers-section {
+      margin-top: 2rem;
     }
   `]
 })
 export class SurveyEditionComponent implements OnInit {
   surveyTitle: string = '';
   surveyYear: string = '';
+  subjects: Subject[] = [];
   selectedSubject: Subject | null = null;
   selectedSubSubject: SubSubject | null = null;
   selectedQuestion: Question | null = null;
+  loading = false;
+  error: string | null = null;
 
-  subjects: Subject[] = [
-    {
-      id: '1',
-      name: 'Demographics',
-      subSubjects: [
-        {
-          id: '1-1',
-          name: 'Age Group',
-          questions: [
-            {
-              id: 'Q1',
-              text: 'What is your age group?',
-              answerType: 'Multiple Choice',
-              difficulty: 'Easy',
-              answers: [
-                { text: '18-24', isCorrect: false },
-                { text: '25-34', isCorrect: false },
-                { text: '35-44', isCorrect: false },
-                { text: '45+', isCorrect: false }
-              ]
-            },
-            {
-              id: 'Q2',
-              text: 'Please specify if other',
-              answerType: 'Text Input',
-              difficulty: 'Medium',
-              answers: []
-            }
-          ]
-        },
-        {
-          id: '1-2',
-          name: 'Location',
-          questions: [
-            {
-              id: 'Q3',
-              text: 'Which country do you reside in?',
-              answerType: 'Dropdown',
-              difficulty: 'Easy',
-              answers: [
-                { text: 'United States', isCorrect: false },
-                { text: 'Canada', isCorrect: false },
-                { text: 'United Kingdom', isCorrect: false },
-                { text: 'Other', isCorrect: false }
-              ]
-            },
-            {
-              id: 'Q4',
-              text: 'What is your city of residence?',
-              answerType: 'Text Input',
-              difficulty: 'Medium',
-              answers: []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: '2',
-      name: 'Product Satisfaction',
-      subSubjects: [
-        {
-          id: '2-1',
-          name: 'Overall Experience',
-          questions: [
-            {
-              id: 'Q5',
-              text: 'How satisfied are you with our product?',
-              answerType: 'Multiple Choice',
-              difficulty: 'Easy',
-              answers: [
-                { text: 'Very Satisfied', isCorrect: false },
-                { text: 'Satisfied', isCorrect: false },
-                { text: 'Neutral', isCorrect: false },
-                { text: 'Dissatisfied', isCorrect: false },
-                { text: 'Very Dissatisfied', isCorrect: false }
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ];
-
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private surveyService: SurveyService
+  ) {}
 
   ngOnInit() {
     this.route.params.subscribe(params => {
       this.surveyTitle = params['title'];
       this.surveyYear = params['year'];
+      this.loadSubjects();
     });
+  }
+
+  loadSubjects() {
+    this.loading = true;
+    this.error = null;
+    
+    this.surveyService.getAllSubjects().subscribe({
+      next: (subjects) => {
+        this.subjects = subjects;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to load subjects. Please try again.';
+        this.loading = false;
+        console.error('Error loading subjects:', err);
+      }
+    });
+  }
+
+  getDifficultyClass(question: Question): string {
+    // You can customize this logic based on your question properties
+    const difficulty = this.getDifficulty(question);
+    return difficulty.toLowerCase();
+  }
+  
+  getDifficulty(question: Question): string {
+    // You can customize this logic based on your question properties
+    // For example, based on question.type or other metrics
+    if (question.type === 'EASY') return 'Easy';
+    if (question.type === 'HARD') return 'Hard';
+    return 'Medium';
+  }
+  
+  getPercentage(answer: Answer): number {
+    if (!this.selectedQuestion) return 0;
+    
+    const total = this.selectedQuestion.answers.reduce(
+      (sum, a) => sum + a.selectionCount, 
+      0
+    );
+    
+    if (total === 0) return 0;
+    return Math.round((answer.selectionCount / total) * 100);
   }
 
   selectSubject(subject: Subject) {

@@ -1,166 +1,322 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, SubSubject } from '../../models/survey.interface';
+import { Subject, SubSubject,Question } from '../../models/surveyDetails.interface';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
   selector: 'app-survey-sidebar',
   standalone: true,
   imports: [CommonModule],
+  animations: [
+    trigger('branchAnimation', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-20px)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-20px)' }))
+      ])
+    ])
+  ],
   template: `
-    <div class="sidebar">
-      <div class="sidebar-header">
-        Survey Structure - {{ surveyTitle }} ({{ surveyYear }})
+    <aside class="tree-sidebar">
+      <div class="tree-header">
+        <h1 class="tree-title">{{ surveyTitle }}</h1>
+        <span class="tree-subtitle">{{ surveyYear }}</span>
       </div>
-      <div class="sidebar-content">
-        <ul class="tree">
-          <li *ngFor="let subject of subjects" class="tree-item">
-            <div 
-              (click)="selectSubject(subject)"
-              class="tree-item-header"
-              [class.expanded]="subject.id === selectedSubject?.id"
-              [class.selected]="subject.id === selectedSubject?.id && !selectedSubSubject"
-            >
-              <span class="tree-icon">
-                <svg viewBox="0 0 24 24" width="16" height="16">
-                  <path
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 18l6-6-6-6"
-                  />
-                </svg>
-              </span>
-              {{ subject.name }}
+
+      <div class="search-container">
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Search branches..."
+        >
+      </div>
+
+      <div class="tree-container">
+        <ul class="tree-root">
+          <li *ngFor="let subject of subjects" class="tree-branch">
+            <!-- Main Branch -->
+            <div class="branch-content"
+                 [class.active]="subject === selectedSubject"
+                 (click)="selectSubject(subject)">
+              <div class="branch-connector">
+                <div class="connector-line"></div>
+                <div class="connector-dot"></div>
+              </div>
+              <div class="branch-label">
+                <span class="branch-icon">🌳</span>
+                {{ subject.title }}
+              </div>
             </div>
-            
-            <ul *ngIf="subject.id === selectedSubject?.id" class="tree-sublist">
-              <li 
-                *ngFor="let subSubject of subject.subSubjects"
-                (click)="selectSubSubject(subSubject)"
-                class="tree-subitem"
-                [class.selected]="selectedSubSubject?.id === subSubject.id"
-              >
-                <span class="tree-icon">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M20 6L9 17l-5-5"
-                    />
-                  </svg>
-                </span>
-                {{ subSubject.name }}
+
+            <!-- Sub Branches -->
+            <ul *ngIf="subject === selectedSubject" 
+                class="sub-branches"
+                [@branchAnimation]>
+              <li *ngFor="let subSubject of subject.subSubjects" 
+                  class="sub-branch"
+                  [class.active]="subSubject === selectedSubSubject">
+                <div class="sub-branch-content" 
+                     (click)="selectSubSubject(subSubject)">
+                  <div class="branch-connector">
+                    <div class="connector-line"></div>
+                    <div class="connector-dot"></div>
+                  </div>
+                  <div class="branch-label">
+                    <span class="branch-icon">🌿</span>
+                    {{ subSubject.title }}
+                  </div>
+                </div>
+
+                <!-- Leaves (Questions) -->
+                <ul *ngIf="subSubject === selectedSubSubject" 
+                    class="leaves"
+                    [@branchAnimation]>
+                  <li *ngFor="let question of subSubject.questions" 
+                      class="leaf"
+                      (click)="questionSelected.emit(question)">
+                    <div class="leaf-content">
+                      <span class="leaf-icon">🍃</span>
+                      {{ question.text }}
+                    </div>
+                  </li>
+                </ul>
               </li>
             </ul>
           </li>
         </ul>
       </div>
-    </div>
+    </aside>
   `,
   styles: [`
-    .sidebar {
-      width: 250px;
-      height: 100%;
-      border-right: 1px solid #e0e0e0;
-      background-color: #f9f9f9;
-      overflow-y: auto;
+    .tree-sidebar {
+      width: 500px;
+      height: 100vh;
+      background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
     }
 
-    .sidebar-header {
-      padding: 16px;
+    .tree-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #2d3436 0%, #1a1c1d 100%);
+      color: white;
+    }
+
+    .tree-title {
+      font-size: 1.25rem;
       font-weight: 600;
-      font-size: 18px;
-      border-bottom: 1px solid #e0e0e0;
+      margin: 0;
+      color: #ffffff;
     }
 
-    .sidebar-content {
-      padding: 8px;
+    .tree-subtitle {
+      font-size: 0.875rem;
+      color: #a0aec0;
     }
 
-    .tree {
-      list-style-type: none;
+    .search-container {
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #68D391;
+      box-shadow: 0 0 0 3px rgba(104, 211, 145, 0.1);
+    }
+
+    .tree-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 1rem;
+      background: linear-gradient(180deg, 
+        rgba(255,255,255,0.9) 0%,
+        rgba(249,250,251,0.9) 100%
+      );
+    }
+
+    .tree-root {
+      list-style: none;
       padding: 0;
       margin: 0;
     }
 
-    .tree-item {
-      margin-bottom: 8px;
+    .tree-branch {
+      margin-bottom: 1rem;
+      position: relative;
     }
 
-    .tree-item-header {
+    .branch-content, .sub-branch-content {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px;
+      padding: 0.75rem;
+      border-radius: 8px;
       cursor: pointer;
-      border-radius: 4px;
-      transition: background-color 0.2s;
+      transition: all 0.3s ease;
+      background: white;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      z-index: 1;
     }
 
-    .tree-item-header:hover {
-      background-color: #f0f0f0;
+    .branch-content:hover, .sub-branch-content:hover {
+      transform: translateX(4px);
+      background: #f7fafc;
+      border-color: #68D391;
     }
 
-    .tree-icon {
-      display: inline-flex;
-      transition: transform 0.2s;
+    .branch-content.active {
+      background: #68D391;
+      color: white;
+      border-color: #68D391;
     }
 
-    .tree-item-header.expanded .tree-icon {
-      transform: rotate(90deg);
+    .branch-connector {
+      position: relative;
+      margin-right: 1rem;
     }
 
-    .tree-item-header.selected {
-      background-color: #e6e6e6;
+    .connector-line {
+      position: absolute;
+      left: -20px;
+      top: 50%;
+      width: 20px;
+      height: 2px;
+      background: #68D391;
+      transform-origin: right;
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
     }
 
-    .tree-sublist {
-      list-style-type: none;
-      padding-left: 24px;
-      margin-top: 4px;
+    .branch-content:hover .connector-line,
+    .branch-content.active .connector-line {
+      transform: scaleX(1);
     }
 
-    .tree-subitem {
+    .connector-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #68D391;
+      transition: all 0.3s ease;
+    }
+
+    .branch-label {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px;
+      gap: 0.5rem;
+      font-weight: 500;
+    }
+
+    .branch-icon {
+      font-size: 1.25rem;
+    }
+
+    .sub-branches {
+      margin-left: 2rem;
+      padding-left: 1rem;
+      border-left: 2px dashed #68D391;
+      margin-top: 0.5rem;
+    }
+
+    .sub-branch {
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+
+    .sub-branch-content {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .sub-branch.active .sub-branch-content {
+      background: #9AE6B4;
+      color: #22543D;
+      border-color: #68D391;
+    }
+
+    .leaves {
+      margin-left: 3rem;
+      padding-left: 1rem;
+      border-left: 2px dotted #9AE6B4;
+      margin-top: 0.5rem;
+    }
+
+    .leaf {
+      margin-bottom: 0.25rem;
+    }
+
+    .leaf-content {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 6px;
       cursor: pointer;
-      border-radius: 4px;
-      transition: background-color 0.2s;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+      color: #4A5568;
     }
 
-    .tree-subitem:hover {
-      background-color: #f0f0f0;
+    .leaf-content:hover {
+      background: rgba(104, 211, 145, 0.1);
+      color: #22543D;
+      transform: translateX(4px);
     }
 
-    .tree-subitem.selected {
-      background-color: #e6e6e6;
+    .leaf-icon {
+      font-size: 1rem;
+      opacity: 0.7;
     }
 
-    .tree-subitem::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      width: 16px;
-      height: 1px;
-      background-color: #ccc;
+    /* Custom Scrollbar */
+    .tree-container::-webkit-scrollbar {
+      width: 6px;
     }
 
-    .tree-subitem:last-child::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      bottom: 0;
-      width: 1px;
-      background-color: #f9f9f9;
+    .tree-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .tree-container::-webkit-scrollbar-thumb {
+      background: #CBD5E0;
+      border-radius: 3px;
+    }
+
+    .tree-container::-webkit-scrollbar-thumb:hover {
+      background: #A0AEC0;
+    }
+
+    /* Animations */
+    @keyframes branchGrow {
+      from {
+        transform: scaleY(0);
+        opacity: 0;
+      }
+      to {
+        transform: scaleY(1);
+        opacity: 1;
+      }
+    }
+
+    .sub-branches, .leaves {
+      animation: branchGrow 0.3s ease-out;
+      transform-origin: top;
     }
   `]
 })
@@ -173,6 +329,7 @@ export class SurveySidebarComponent {
 
   @Output() subjectSelected = new EventEmitter<Subject>();
   @Output() subSubjectSelected = new EventEmitter<SubSubject>();
+  @Output() questionSelected = new EventEmitter<Question>();
 
   selectSubject(subject: Subject) {
     this.subjectSelected.emit(subject);
@@ -182,4 +339,3 @@ export class SurveySidebarComponent {
     this.subSubjectSelected.emit(subSubject);
   }
 }
-
