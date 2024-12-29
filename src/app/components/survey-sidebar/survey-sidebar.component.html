@@ -1,0 +1,69 @@
+<aside class="tree-sidebar">
+    <div class="tree-header">
+      <h1 class="tree-title">{{ surveyTitle }}</h1>
+      <span class="tree-subtitle">{{ surveyYear }}</span>
+    </div>
+
+    <div class="search-container">
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Search branches..."
+      >
+    </div>
+
+    <div class="tree-container">
+      <ul class="tree-root">
+        <li *ngFor="let subject of subjects" class="tree-branch">
+          <!-- Main Branch -->
+          <div class="branch-content"
+               [class.active]="subject === selectedSubject"
+               (click)="selectSubject(subject)">
+            <div class="branch-connector">
+              <div class="connector-line"></div>
+              <div class="connector-dot"></div>
+            </div>
+            <div class="branch-label">
+              <span class="branch-icon">🌳</span>
+              {{ subject.title }}
+            </div>
+          </div>
+
+          <!-- Sub Branches -->
+          <ul *ngIf="subject === selectedSubject" 
+              class="sub-branches"
+              [@branchAnimation]>
+            <li *ngFor="let subSubject of subject.subSubjects" 
+                class="sub-branch"
+                [class.active]="subSubject === selectedSubSubject">
+              <div class="sub-branch-content" 
+                   (click)="selectSubSubject(subSubject)">
+                <div class="branch-connector">
+                  <div class="connector-line"></div>
+                  <div class="connector-dot"></div>
+                </div>
+                <div class="branch-label">
+                  <span class="branch-icon">🌿</span>
+                  {{ subSubject.title }}
+                </div>
+              </div>
+
+              <!-- Leaves (Questions) -->
+              <ul *ngIf="subSubject === selectedSubSubject" 
+                  class="leaves"
+                  [@branchAnimation]>
+                <li *ngFor="let question of subSubject.questions" 
+                    class="leaf"
+                    (click)="questionSelected.emit(question)">
+                  <div class="leaf-content">
+                    <span class="leaf-icon">🍃</span>
+                    {{ question.text }}
+                  </div>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </aside>

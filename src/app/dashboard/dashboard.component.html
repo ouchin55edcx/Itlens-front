@@ -1,38 +1,92 @@
-<h1>Survey Dashboard</h1>
-
-<div *ngIf="loading" class="loading-container">
-  Loading surveys...
-</div>
-
-<div *ngIf="error" class="error-container">
-  <div>{{ error }}</div>
-  <button class="retry-button" (click)="loadSurveys()">Retry</button>
-</div>
-
-<div *ngIf="!loading && !error" class="survey-container">
-  <div *ngFor="let survey of surveys" class="survey-card">
-    <div class="survey-header">
-      <h2>{{ survey.title }}</h2>
-      <span class="survey-icon">📋</span>
+<div class="dashboard-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="material-icons">assessment</span>
+      Survey Dashboard
     </div>
-    <p class="description">{{ survey.description }}</p>
-    <div class="recent-editions">
-      <h3>Recent Editions</h3>
-      <div class="editions">
-        <div 
-          *ngFor="let edition of survey.surveyEditions" 
-          class="edition"
-          [ngClass]="getEditionStatus(edition)"
-          (click)="onEditionClick(survey, edition)"
-        >
-          <span class="edition-icon">📅</span>
-          {{ edition.year }}
+    <nav class="nav-list">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">dashboard</span>
+        Dashboard
+      </a>
+      <a routerLink="/statistics" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">analytics</span>
+        Statistics
+      </a>
+      <a routerLink="/global-results" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">public</span>
+        Global Results
+      </a>
+      <a routerLink="/manage-surveys" routerLinkActive="active" class="nav-item">
+        <span class="material-icons">edit_note</span>
+        Manage Surveys
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="top-bar">
+      <div class="search-box">
+        <span class="material-icons">search</span>
+        <input type="text" placeholder="Search surveys..." />
+      </div>
+      <div class="actions">
+        <select>
+          <option value="name">Sort by Name</option>
+          <option value="date">Sort by Date</option>
+          <option value="status">Sort by Status</option>
+        </select>
+        <button class="create-survey">
+          <span class="material-icons">add</span>
+          Create Survey
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <span class="material-icons spin">refresh</span>
+      Loading surveys...
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-container">
+      <div>{{ error }}</div>
+      <button class="retry-button" (click)="loadSurveys()">
+        <span class="material-icons">refresh</span>
+        Retry
+      </button>
+    </div>
+
+    <!-- Survey Grid -->
+    <div *ngIf="!loading && !error" class="survey-container">
+      <div *ngFor="let survey of surveys" class="survey-card">
+        <div class="survey-header">
+          <h2>{{ survey.title }}</h2>
+          <span class="material-icons">description</span>
+        </div>
+        <p class="description">{{ survey.description }}</p>
+        <div class="recent-editions">
+          <h3>Recent Editions</h3>
+          <div class="editions">
+            <div
+              *ngFor="let edition of survey.surveyEditions"
+              class="edition"
+              [ngClass]="getEditionStatus(edition)"
+              (click)="onEditionClick(survey, edition)"
+            >
+              <span class="material-icons">event</span>
+              {{ edition.year }}
+            </div>
+          </div>
+        </div>
+        <div class="owner">
+          <span class="material-icons">person</span>
+          {{ survey.owner.name }}
         </div>
       </div>
     </div>
-    <div class="owner">
-      <span class="owner-icon">👤</span>
-      {{ survey.owner.name }}
-    </div>
-  </div>
+  </main>
 </div>
