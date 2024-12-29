@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { Survey, Edition } from '../models/survey.interface';
+import { Survey, SurveyEdition } from '../models/survey.interface';
+import { SurveyService } from '../services/survey.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,55 +11,48 @@ import { Survey, Edition } from '../models/survey.interface';
   standalone: true,
   imports: [CommonModule, RouterModule],
 })
-export class DashboardComponent {
-  surveys: Survey[] = [
-    {
-      title: 'Employee Satisfaction Survey',
-      editions: [
-        { 
-          year: 2023, 
-          status: 'active',
-          subjects: []
-        },
-        { 
-          year: 2024, 
-          status: 'draft',
-          subjects: []
-        },
-      ],
-    },
-    {
-      title: 'Customer Feedback Survey',
-      editions: [
-        { 
-          year: 2023, 
-          status: 'active',
-          subjects: []
-        },
-      ],
-    },
-    {
-      title: 'Product Development Survey',
-      editions: [
-        { 
-          year: 2023, 
-          status: 'active',
-          subjects: []
-        },
-        { 
-          year: 2024, 
-          status: 'draft',
-          subjects: []
-        },
-      ],
-    },
-  ];
+export class DashboardComponent implements OnInit {
+  surveys: Survey[] = [];
+  loading = false;
+  error: string | null = null;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private surveyService: SurveyService
+  ) {}
 
-  onEditionClick(survey: Survey, edition: Edition): void {
-    console.log(`Redirecting to Survey Edition Page for: ${survey.title}, Year: ${edition.year}`);
+  ngOnInit(): void {
+    this.loadSurveys();
+  }
+
+  loadSurveys(): void {
+    this.loading = true;
+    this.error = null;
+    
+    this.surveyService.getSurveys().subscribe({
+      next: (response) => {
+        this.surveys = response.content;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to load surveys. Please try again later.';
+        this.loading = false;
+        console.error('Error loading surveys:', err);
+      }
+    });
+  }
+
+  onEditionClick(survey: Survey, edition: SurveyEdition): void {
     this.router.navigate(['/survey-edition', survey.title, edition.year]);
   }
-}
 
+  getEditionStatus(edition: SurveyEdition): string {
+    const currentYear = new Date().getFullYear();
+    if (edition.year < currentYear) {
+      return 'archived';
+    } else if (edition.year === currentYear) {
+      return 'active';
+    }
+    return 'draft';
+  }
+}

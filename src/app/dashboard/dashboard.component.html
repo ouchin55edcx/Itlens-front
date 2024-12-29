@@ -1,16 +1,38 @@
 <h1>Survey Dashboard</h1>
 
-<div class="survey-container">
+<div *ngIf="loading" class="loading-container">
+  Loading surveys...
+</div>
+
+<div *ngIf="error" class="error-container">
+  <div>{{ error }}</div>
+  <button class="retry-button" (click)="loadSurveys()">Retry</button>
+</div>
+
+<div *ngIf="!loading && !error" class="survey-container">
   <div *ngFor="let survey of surveys" class="survey-card">
-    <h2>{{ survey.title }}</h2>
-    <div class="editions">
-      <span *ngFor="let edition of survey.editions" 
-            class="edition"
-            [ngClass]="edition.status"
-            (click)="onEditionClick(survey, edition)">
-        {{ edition.year }}
-      </span>
+    <div class="survey-header">
+      <h2>{{ survey.title }}</h2>
+      <span class="survey-icon">📋</span>
+    </div>
+    <p class="description">{{ survey.description }}</p>
+    <div class="recent-editions">
+      <h3>Recent Editions</h3>
+      <div class="editions">
+        <div 
+          *ngFor="let edition of survey.surveyEditions" 
+          class="edition"
+          [ngClass]="getEditionStatus(edition)"
+          (click)="onEditionClick(survey, edition)"
+        >
+          <span class="edition-icon">📅</span>
+          {{ edition.year }}
+        </div>
+      </div>
+    </div>
+    <div class="owner">
+      <span class="owner-icon">👤</span>
+      {{ survey.owner.name }}
     </div>
   </div>
 </div>
-
