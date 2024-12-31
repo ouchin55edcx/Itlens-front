@@ -1,0 +1,113 @@
+<div class="survey-container">
+    <app-survey-sidebar
+      [surveyTitle]="surveyTitle"
+      [surveyYear]="surveyYear"
+      [subjects]="subjects"
+      [selectedSubject]="selectedSubject"
+      [selectedSubSubject]="selectedSubSubject"
+      (subjectSelected)="selectSubject($event)"
+      (subSubjectSelected)="selectSubSubject($event)"
+    ></app-survey-sidebar>
+
+    <main class="main-content">
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading subjects...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error" class="error-state">
+        <div class="error-message">
+          <svg xmlns="http://www.w3.org/2000/svg" class="error-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+          </svg>
+          <p>{{ error }}</p>
+        </div>
+        <button class="retry-button" (click)="loadSubjects()">
+          Retry
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div *ngIf="!loading && !error" class="content-wrapper">
+        <header class="content-header">
+          <h1 class="content-title">
+            {{ selectedSubSubject ? selectedSubSubject.title : (selectedSubject ? selectedSubject.title : 'Select a subject') }}
+          </h1>
+        </header>
+        
+        <div class="content-body">
+          <!-- Questions Table -->
+          <section *ngIf="selectedSubSubject" class="questions-section">
+            <h2 class="section-title">Questions</h2>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Question</th>
+                    <th>Type</th>
+                    <th>Difficulty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let question of selectedSubSubject.questions" 
+                      (click)="selectQuestion(question)"
+                      [class.selected]="selectedQuestion?.id === question.id"
+                      class="table-row">
+                    <td>{{ question.id }}</td>
+                    <td>{{ question.text }}</td>
+                    <td>
+                      <span class="badge" [class]="question.type.toLowerCase()">
+                        {{ question.type }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="difficulty-badge" [class]="getDifficultyClass(question)">
+                        {{ getDifficulty(question) }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Answers Table -->
+          <section *ngIf="selectedQuestion" class="answers-section">
+            <h2 class="section-title">
+              Answers for Question {{ selectedQuestion.id }}
+            </h2>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Answer</th>
+                    <th>Selection Count</th>
+                    <th>Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let answer of selectedQuestion.answers" class="table-row">
+                    <td>{{ answer.text }}</td>
+                    <td>{{ answer.selectionCount }}</td>
+                    <td>
+                      <div class="progress-wrapper">
+                        <div class="progress-bar" 
+                             [style.width]="getPercentage(answer) + '%'">
+                        </div>
+                        <span class="progress-text">
+                          {{ getPercentage(answer) }}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>

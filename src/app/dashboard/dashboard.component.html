@@ -1,24 +1,28 @@
-<div class="dashboard-layout">
+<div class="flex">
   <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="logo">
-      <span class="material-icons">assessment</span>
+  <aside class="bg-white fixed h-screen w-60 border-r shadow-sm p-6 transition-all hover:w-64">
+    <div class="flex items-center gap-3 text-lg font-semibold text-gray-800 mb-8 hover:scale-105 transition-transform cursor-pointer">
+      <span class="material-icons" style="color: #047956">assessment</span>
       Survey Dashboard
     </div>
-    <nav class="nav-list">
-      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+    <nav class="space-y-2">
+      <a routerLink="/dashboard" routerLinkActive="active"
+         class="flex items-center gap-3 p-3 rounded-md text-sm text-gray-600 hover:bg-[#ecfcf4] hover:text-[#047956] transition-all">
         <span class="material-icons">dashboard</span>
         Dashboard
       </a>
-      <a routerLink="/statistics" routerLinkActive="active" class="nav-item">
+      <a routerLink="/statistics" routerLinkActive="active"
+         class="flex items-center gap-3 p-3 rounded-md text-sm text-gray-600 hover:bg-[#ecfcf4] hover:text-[#047956] transition-all">
         <span class="material-icons">analytics</span>
         Statistics
       </a>
-      <a routerLink="/global-results" routerLinkActive="active" class="nav-item">
+      <a routerLink="/global-results" routerLinkActive="active"
+         class="flex items-center gap-3 p-3 rounded-md text-sm text-gray-600 hover:bg-[#ecfcf4] hover:text-[#047956] transition-all">
         <span class="material-icons">public</span>
         Global Results
       </a>
-      <a routerLink="/manage-surveys" routerLinkActive="active" class="nav-item">
+      <a routerLink="/manage-surveys" routerLinkActive="active"
+         class="flex items-center gap-3 p-3 rounded-md text-sm text-gray-600 hover:bg-[#ecfcf4] hover:text-[#047956] transition-all">
         <span class="material-icons">edit_note</span>
         Manage Surveys
       </a>
@@ -26,19 +30,27 @@
   </aside>
 
   <!-- Main Content -->
-  <main class="main-content">
-    <div class="top-bar">
-      <div class="search-box">
-        <span class="material-icons">search</span>
-        <input type="text" placeholder="Search surveys..." />
+  <main class="flex-1 ml-64 p-6 bg-[#ecfcf4] min-h-screen transition-margin">
+    <app-add-survey-popup
+      *ngIf="showAddSurveyPopup"
+      (onClose)="closeAddSurveyPopup()">
+    </app-add-survey-popup>
+    <!-- Header Section -->
+    <div class="flex justify-between items-center gap-4 mb-8 p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+      <div class="flex items-center gap-2 bg-white border rounded-md px-3 py-2 w-80 transition-all hover:border-[#047956] focus-within:border-[#047956] focus-within:ring-2 ring-[#ecfcf4]">
+        <span class="material-icons text-gray-400">search</span>
+        <input type="text" placeholder="Search surveys..."
+               class="w-full border-none outline-none text-sm text-gray-700 bg-transparent" />
       </div>
-      <div class="actions">
-        <select>
+      <div class="flex gap-4 items-center">
+        <select
+          class="p-2 border rounded-md bg-white text-sm text-gray-700 focus:outline-none focus:border-[#047956] focus:ring-2 ring-[#ecfcf4]">
           <option value="name">Sort by Name</option>
           <option value="date">Sort by Date</option>
           <option value="status">Sort by Status</option>
         </select>
-        <button class="create-survey">
+        <button (click)="openAddSurveyPopup()"
+                class="flex items-center gap-2 bg-[#047956] text-white px-4 py-2 rounded-md text-sm font-medium shadow-md hover:bg-[#036845] hover:shadow-lg transition-all">
           <span class="material-icons">add</span>
           Create Survey
         </button>
@@ -46,44 +58,64 @@
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="loading" class="loading-container">
-      <span class="material-icons spin">refresh</span>
-      Loading surveys...
+    <div *ngIf="loading" class="flex flex-col items-center gap-2 text-gray-600 p-8">
+      <span class="material-icons animate-spin text-3xl text-[#047956]">refresh</span>
+      <p class="text-lg">Loading surveys...</p>
     </div>
 
     <!-- Error State -->
-    <div *ngIf="error" class="error-container">
-      <div>{{ error }}</div>
-      <button class="retry-button" (click)="loadSurveys()">
+    <div *ngIf="error" class="text-center p-8">
+      <div class="text-red-500 mb-4">{{ error }}</div>
+      <button (click)="loadSurveys()"
+              class="flex items-center gap-2 mx-auto text-white bg-[#047956] px-4 py-2 rounded-md shadow-md hover:bg-[#036845] hover:shadow-lg transition-all">
         <span class="material-icons">refresh</span>
         Retry
       </button>
     </div>
 
     <!-- Survey Grid -->
-    <div *ngIf="!loading && !error" class="survey-container">
-      <div *ngFor="let survey of surveys" class="survey-card">
-        <div class="survey-header">
-          <h2>{{ survey.title }}</h2>
-          <span class="material-icons">description</span>
+    <div *ngIf="!loading && !error"
+         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let survey of surveys"
+           class="bg-white p-6 rounded-lg border shadow-md hover:shadow-lg transition-all">
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="text-lg font-semibold text-gray-800 hover:text-[#047956] transition-colors">
+            {{ survey.title }}
+          </h2>
+          <div class="flex gap-2">
+            <button
+                    class="p-2 rounded-full hover:bg-[#ecfcf4] text-[#047956] transition-all"
+                    title="Edit Survey">
+              <span class="material-icons text-xl">edit</span>
+            </button>
+            <button
+                    class="p-2 rounded-full hover:bg-red-50 text-red-500 transition-all"
+                    title="Delete Survey">
+              <span class="material-icons text-xl">delete</span>
+            </button>
+          </div>
         </div>
-        <p class="description">{{ survey.description }}</p>
-        <div class="recent-editions">
-          <h3>Recent Editions</h3>
-          <div class="editions">
-            <div
-              *ngFor="let edition of survey.surveyEditions"
-              class="edition"
-              [ngClass]="getEditionStatus(edition)"
-              (click)="onEditionClick(survey, edition)"
-            >
-              <span class="material-icons">event</span>
+        <p class="text-sm text-gray-600 mb-4">{{ survey.description }}</p>
+
+        <div class="mb-4">
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">Recent Editions</h3>
+          <div class="flex flex-wrap gap-2">
+            <div *ngFor="let edition of survey.surveyEditions"
+                 [ngClass]="{
+                'bg-[#ecfcf4] text-[#047956]': getEditionStatus(edition) === 'active',
+                'bg-gray-100 text-gray-500': getEditionStatus(edition) === 'archived',
+                'bg-blue-100 text-blue-500': getEditionStatus(edition) === 'draft'
+              }"
+                 (click)="onEditionClick(survey, edition)"
+                 class="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer">
+              <span class="material-icons text-sm">event</span>
               {{ edition.year }}
             </div>
           </div>
         </div>
-        <div class="owner">
-          <span class="material-icons">person</span>
+
+        <div class="flex items-center gap-2 mt-4 pt-4 border-t text-sm text-gray-500">
+          <span class="material-icons text-[#047956]">person</span>
           {{ survey.owner.name }}
         </div>
       </div>

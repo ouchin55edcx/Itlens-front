@@ -1,20 +1,22 @@
+// dashboard.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Survey, SurveyEdition } from '../models/survey.interface';
 import { SurveyService } from '../services/survey.service';
+import { AddSurveyPopupComponent } from '../components/add-survey-popup/add-survey-popup.component';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css'],
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AddSurveyPopupComponent],
 })
 export class DashboardComponent implements OnInit {
   surveys: Survey[] = [];
   loading = false;
   error: string | null = null;
+  showAddSurveyPopup = false;
 
   constructor(
     private router: Router,
@@ -28,7 +30,7 @@ export class DashboardComponent implements OnInit {
   loadSurveys(): void {
     this.loading = true;
     this.error = null;
-    
+
     this.surveyService.getSurveys().subscribe({
       next: (response) => {
         this.surveys = response.content;
@@ -41,6 +43,16 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
+
+
+  openAddSurveyPopup(): void {
+    this.showAddSurveyPopup = true;
+  }
+
+  closeAddSurveyPopup(): void {
+    this.showAddSurveyPopup = false;
+  }
+
 
   onEditionClick(survey: Survey, edition: SurveyEdition): void {
     this.router.navigate(['/survey-edition', survey.title, edition.year]);
@@ -55,4 +67,9 @@ export class DashboardComponent implements OnInit {
     }
     return 'draft';
   }
+
+  onUpdateSurvey(survey: Survey): void {
+    this.router.navigate(['/edit-survey', survey.id]);
+  }
+
 }
