@@ -1,69 +1,73 @@
-<aside class="tree-sidebar">
-    <div class="tree-header">
-      <h1 class="tree-title">{{ surveyTitle }}</h1>
-      <span class="tree-subtitle">{{ surveyYear }}</span>
-    </div>
+<!-- Updated Sidebar -->
+<aside class="w-80 h-screen bg-white border-r border-gray-200 flex flex-col">
+  <!-- Header -->
+  <div class="p-4 border-b border-gray-200">
+    <h2 class="text-lg font-semibold text-gray-800">Survey Structure</h2>
+  </div>
 
-    <div class="search-container">
-      <input 
-        type="text" 
-        class="search-input" 
-        placeholder="Search branches..."
-      >
-    </div>
+  <!-- Tree Container -->
+  <div class="flex-1 overflow-y-auto">
+    <ul class="p-3 space-y-0.5">
+      <!-- Main Branches -->
+      <li *ngFor="let subject of subjects" class="relative">
+        <div
+          class="flex items-center py-1.5 px-2 rounded cursor-pointer transition-colors duration-200"
+          [class.text-[#1a5f7a]]="subject === selectedSubject"
+          (click)="selectSubject(subject)"
+        >
+          <svg 
+            class="w-4 h-4 transition-transform duration-200"
+            [ngClass]="{'rotate-90': subject === selectedSubject}"
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2"
+          >
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+          <span class="ml-1 text-sm font-medium">{{ subject.title }}</span>
+        </div>
 
-    <div class="tree-container">
-      <ul class="tree-root">
-        <li *ngFor="let subject of subjects" class="tree-branch">
-          <!-- Main Branch -->
-          <div class="branch-content"
-               [class.active]="subject === selectedSubject"
-               (click)="selectSubject(subject)">
-            <div class="branch-connector">
-              <div class="connector-line"></div>
-              <div class="connector-dot"></div>
+        <!-- Sub Branches -->
+        <ul *ngIf="subject === selectedSubject"
+            class="ml-4 mt-0.5 space-y-0.5"
+            [@branchAnimation]>
+          <li *ngFor="let subSubject of subject.subSubjects">
+            <div
+              class="flex items-center py-1.5 px-2 rounded cursor-pointer transition-colors duration-200"
+              [class.text-[#1a5f7a]]="subSubject === selectedSubSubject"
+              (click)="selectSubSubject(subSubject)"
+            >
+              <svg 
+                class="w-4 h-4 transition-transform duration-200"
+                [ngClass]="{'rotate-90': subSubject === selectedSubSubject}"
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2"
+              >
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+              <span class="ml-1 text-sm">{{ subSubject.title }}</span>
             </div>
-            <div class="branch-label">
-              <span class="branch-icon">🌳</span>
-              {{ subject.title }}
-            </div>
-          </div>
 
-          <!-- Sub Branches -->
-          <ul *ngIf="subject === selectedSubject" 
-              class="sub-branches"
-              [@branchAnimation]>
-            <li *ngFor="let subSubject of subject.subSubjects" 
-                class="sub-branch"
-                [class.active]="subSubject === selectedSubSubject">
-              <div class="sub-branch-content" 
-                   (click)="selectSubSubject(subSubject)">
-                <div class="branch-connector">
-                  <div class="connector-line"></div>
-                  <div class="connector-dot"></div>
+            <!-- Questions (Leaves) -->
+            <ul *ngIf="subSubject === selectedSubSubject"
+                class="ml-6 mt-0.5 space-y-0.5"
+                [@branchAnimation]>
+              <li *ngFor="let question of subSubject.questions">
+                <div
+                  class="flex items-center py-1.5 px-2 rounded cursor-pointer group"
+                  (click)="questionSelected.emit(question)"
+                >
+                  <div class="w-2 h-2 rounded-full bg-[#1a5f7a]"></div>
+                  <span class="ml-2 text-sm text-gray-600">{{ question.text }}</span>
                 </div>
-                <div class="branch-label">
-                  <span class="branch-icon">🌿</span>
-                  {{ subSubject.title }}
-                </div>
-              </div>
-
-              <!-- Leaves (Questions) -->
-              <ul *ngIf="subSubject === selectedSubSubject" 
-                  class="leaves"
-                  [@branchAnimation]>
-                <li *ngFor="let question of subSubject.questions" 
-                    class="leaf"
-                    (click)="questionSelected.emit(question)">
-                  <div class="leaf-content">
-                    <span class="leaf-icon">🍃</span>
-                    {{ question.text }}
-                  </div>
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-  </aside>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</aside>

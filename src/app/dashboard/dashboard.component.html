@@ -1,3 +1,4 @@
+<!-- dashboard.component.html -->
 <div class="flex">
   <!-- Sidebar -->
   <aside class="bg-white fixed h-screen w-60 border-r shadow-sm p-6 transition-all hover:w-64">
@@ -35,6 +36,7 @@
       *ngIf="showAddSurveyPopup"
       (onClose)="closeAddSurveyPopup()">
     </app-add-survey-popup>
+
     <!-- Header Section -->
     <div class="flex justify-between items-center gap-4 mb-8 p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
       <div class="flex items-center gap-2 bg-white border rounded-md px-3 py-2 w-80 transition-all hover:border-[#047956] focus-within:border-[#047956] focus-within:ring-2 ring-[#ecfcf4]">
@@ -83,7 +85,7 @@
             {{ survey.title }}
           </h2>
           <div class="flex gap-2">
-            <button
+            <button (click)="onUpdateSurvey(survey)"
                     class="p-2 rounded-full hover:bg-[#ecfcf4] text-[#047956] transition-all"
                     title="Edit Survey">
               <span class="material-icons text-xl">edit</span>

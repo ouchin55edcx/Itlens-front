@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, SubSubject,Question } from '../../models/surveyDetails.interface';
+import { Subject, SubSubject, Question } from '../../models/surveyDetails.interface';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 
 @Component({
@@ -32,11 +32,22 @@ export class SurveySidebarComponent {
   @Output() subSubjectSelected = new EventEmitter<SubSubject>();
   @Output() questionSelected = new EventEmitter<Question>();
 
+  hoveredSubject: Subject | null = null;
+  hoveredSubSubject: SubSubject | null = null;
+
   selectSubject(subject: Subject) {
     this.subjectSelected.emit(subject);
   }
 
   selectSubSubject(subSubject: SubSubject) {
     this.subSubjectSelected.emit(subSubject);
+  }
+
+  onSubjectHover(subject: Subject | null) {
+    this.hoveredSubject = subject;
+  }
+
+  onSubSubjectHover(subSubject: SubSubject | null) {
+    this.hoveredSubSubject = subSubject;
   }
 }
