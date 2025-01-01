@@ -1,0 +1,28 @@
+<aside 
+  class="bg-white fixed h-screen border-r shadow-sm transition-all duration-300 ease-in-out"
+  [class.w-16]="!isExpanded"
+  [class.w-60]="isExpanded"
+  (mouseenter)="isExpanded = true"
+  (mouseleave)="isExpanded = false">
+  
+  <div class="p-4">
+    <div class="flex items-center gap-3 text-lg font-semibold text-gray-800 mb-8 whitespace-nowrap overflow-hidden">
+      <span class="material-icons text-[#047956] shrink-0">assessment</span>
+      <span class="transition-opacity duration-300" [class.opacity-0]="!isExpanded">
+        Survey Dashboard
+      </span>
+    </div>
+
+    <nav class="space-y-2">
+      <a *ngFor="let item of navItems"
+         [routerLink]="item.path"
+         routerLinkActive="bg-[#ecfcf4] text-[#047956]"
+         class="flex items-center gap-3 p-3 rounded-md text-sm text-gray-600 hover:bg-[#ecfcf4] hover:text-[#047956] transition-all whitespace-nowrap overflow-hidden">
+        <span class="material-icons shrink-0">{{item.icon}}</span>
+        <span class="transition-opacity duration-300" [class.opacity-0]="!isExpanded">
+          {{item.label}}
+        </span>
+      </a>
+    </nav>
+  </div>
+</aside>

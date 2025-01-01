@@ -1,16 +1,21 @@
-// dashboard.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Survey, SurveyEdition } from '../models/survey.interface';
 import { SurveyService } from '../services/survey.service';
 import { AddSurveyPopupComponent } from '../components/add-survey-popup/add-survey-popup.component';
+import { SidebarComponent } from './sidebar/sidebar.component';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   standalone: true,
-  imports: [CommonModule, RouterModule, AddSurveyPopupComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    AddSurveyPopupComponent,
+    SidebarComponent
+  ],
 })
 export class DashboardComponent implements OnInit {
   surveys: Survey[] = [];
